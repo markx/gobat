@@ -3,32 +3,29 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"io"
 	"os"
 
 	"github.com/ziutek/telnet"
 )
 
-func Com(t *telnet.Conn) {
+func Com(t *telnet.Conn, c chan string) {
 	for {
-		buf, err := t.ReadString('\n')
+		rune, _, err := t.ReadRune()
 		if err != nil {
 			panic(err)
 		}
-
-		print(buf)
+		c <- string(rune)
 	}
-
 }
 
-func prompt(t io.Writer) {
+func Prompt(c chan string) {
 	for {
 		reader := bufio.NewReader(os.Stdin)
-		line, err := reader.ReadBytes('\n')
+		line, err := reader.ReadString('\n')
 		if err != nil {
 			panic(err)
 		}
-		t.Write(line)
+		c <- line
 	}
 }
 
@@ -49,13 +46,24 @@ func main() {
 
 	dst := host + ":" + port
 
-	t, err := telnet.Dial("tcp", dst)
-	defer t.Close()
+	conn, err := telnet.Dial("tcp", dst)
+	defer conn.Close()
 
 	if err != nil {
 		panic(err)
 	}
 
-	go Com(t)
-	prompt(t)
+	serverMessageChan := make(chan string)
+	userInputChan := make(chan string)
+	go Com(conn, serverMessageChan)
+	go Prompt(userInputChan)
+
+	for {
+		select {
+		case serverMessage := <-serverMessageChan:
+			print(serverMessage)
+		case userInput := <-userInputChan:
+			conn.Write([]byte(userInput))
+		}
+	}
 }
