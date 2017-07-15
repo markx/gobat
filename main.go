@@ -4,17 +4,41 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/ziutek/telnet"
 )
 
 func Com(t *telnet.Conn, c chan string) {
-	for {
-		rune, _, err := t.ReadRune()
-		if err != nil {
-			panic(err)
+	byteChan := make(chan byte)
+
+	go func() {
+		for {
+			b, err := t.ReadByte()
+			if err != nil {
+				panic(err)
+			}
+			byteChan <- b
 		}
-		c <- string(rune)
+	}()
+
+	var line []byte
+	for {
+
+		select {
+		case b := <-byteChan:
+			line = append(line, b)
+			if b == '\n' {
+				c <- string(line)
+				line = nil
+			}
+
+		case <-time.After(time.Millisecond * 300):
+			if line != nil {
+				c <- string(line)
+				line = nil
+			}
+		}
 	}
 }
 
