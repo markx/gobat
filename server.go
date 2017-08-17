@@ -2,9 +2,9 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"time"
 
-	"github.com/tsuru/tsuru/log"
 	"github.com/ziutek/telnet"
 )
 
@@ -21,16 +21,18 @@ func (s *Server) Connect() error {
 	if err != nil {
 		return fmt.Errorf("could not dial: %v", err)
 	}
+	conn.SetUnixWriteMode(true)
 
 	s.connection = conn
 	return nil
 }
 
-func (s *Server) Close() {
+func (s *Server) Close() error {
 	err := s.connection.Close()
 	if err != nil {
-		log.Error(err)
+		return fmt.Errorf("could not close: %v", err)
 	}
+	return nil
 }
 
 func (s *Server) Write(content []byte) error {
@@ -39,41 +41,8 @@ func (s *Server) Write(content []byte) error {
 }
 
 func (s *Server) Read() ([]byte, error) {
-	byteChan := make(chan byte)
-	errChan := make(chan error)
-
-	quit := make(chan struct{})
-	defer close(quit)
-
-	go func() {
-		for {
-			select {
-			case <-quit:
-				return
-			default:
-				b, err := s.connection.ReadByte()
-				if err != nil {
-					errChan <- err
-					return
-				}
-				byteChan <- b
-			}
-		}
-	}()
-
-	var line []byte
-	for {
-		select {
-		case b := <-byteChan:
-			line = append(line, b)
-			if b == '\n' {
-				return line, nil
-			}
-		case err := <-errChan:
-			return line, err
-
-		case <-time.After(time.Millisecond * 300):
-			return line, nil
-		}
-	}
+	buf := make([]byte, 1024)
+	b, err := s.connection.Read(buf)
+	log.Println(b, err)
+	return buf[:b], err
 }
