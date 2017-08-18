@@ -1,28 +1,22 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"os"
 )
 
 func main() {
-	args := os.Args[1:]
 
-	host := "aardmud.org"
-	port := "4000"
-
-	if len(args) >= 2 {
-		host = args[0]
-		port = args[1]
-	}
+	host := flag.String("host", "aardmud.org", "mud server host")
+	port := flag.String("port", "4000", "mud server port")
+	flag.Parse()
 
 	server := &Server{
-		host: host,
-		port: port,
+		host: *host,
+		port: *port,
 	}
 
-	err := server.Connect()
-	if err != nil {
 		log.Fatal(err)
 	}
 
