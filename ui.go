@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/jroimartin/gocui"
 )
@@ -12,24 +13,29 @@ var ui *UI
 type UI struct {
 	server *Server
 	g      *gocui.Gui
+	quit   chan struct{}
 }
 
 func NewUI(s *Server) *UI {
 	ui = &UI{
 		server: s,
+		quit:   make(chan struct{}),
 	}
 
 	return ui
 }
 
 func (ui *UI) Run() error {
+	err := ui.server.Connect()
+	if err != nil {
+		return fmt.Errorf("could not connect to server: %v", err)
+	}
+
 	g, err := gocui.NewGui(gocui.OutputNormal)
 	if err != nil {
 		// handle error
 		return fmt.Errorf("could not create ui: %v", err)
 	}
-	defer g.Close()
-
 	ui.g = g
 
 	g.Cursor = true
@@ -37,24 +43,31 @@ func (ui *UI) Run() error {
 	g.SetManagerFunc(layout)
 
 	if err := g.SetKeybinding("", gocui.KeyCtrlC, gocui.ModNone, quit); err != nil {
-		return fmt.Errorf("error from main loop: %v", err)
+		return fmt.Errorf("could not set key binding: %v", err)
 	}
 	if err := g.MainLoop(); err != nil && err != gocui.ErrQuit {
 		return fmt.Errorf("error from main loop: %v", err)
 	}
 
+	if err := ui.Close(); err != nil {
+		return fmt.Errorf("could not close gracefully: %v", err)
+	}
+	return nil
+}
+
+func (ui *UI) Close() error {
+	close(ui.quit)
+	ui.g.Close()
 	return nil
 }
 
 func layout(g *gocui.Gui) error {
 	if err := createMainView(g); err != nil {
-		log.Print("failed to create layout", err)
-		return err
+		return fmt.Errorf("failed to create main view: %v", err)
 	}
 
 	if err := createInputView(g); err != nil {
-		log.Print("failed to create layout", err)
-		return err
+		return fmt.Errorf("failed to create input view: %v ", err)
 	}
 
 	return nil
@@ -75,8 +88,13 @@ func createMainView(g *gocui.Gui) error {
 		v.Wrap = true
 
 		go func() {
-			for {
-				updateMainView(g)
+			for range time.Tick(100 * time.Millisecond) {
+				select {
+				case <-ui.quit:
+					return
+				default:
+					updateMainView(g)
+				}
 			}
 		}()
 
@@ -111,10 +129,17 @@ func updateMainView(g *gocui.Gui) {
 		log.Println(err)
 		return
 	}
+	if len(msg) == 0 {
+		return
+	}
 
 	g.Execute(func(g *gocui.Gui) error {
 		view, _ := g.View("mainView")
-		fmt.Fprint(view, string(msg))
+		_, err := view.Write(msg)
+		if err != nil {
+			return fmt.Errorf("could not write to main view: %v", err)
+		}
 		return nil
+
 	})
 }

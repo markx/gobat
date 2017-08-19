@@ -23,10 +23,9 @@ func main() {
 		port: *port,
 	}
 
+	gui := NewUI(server)
+	if err := gui.Run(); err != nil {
 		log.Fatal(err)
 	}
-
-	gui := NewUI(server)
-	gui.Run()
 
 }
