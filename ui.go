@@ -133,7 +133,7 @@ func updateMainView(g *gocui.Gui) {
 		return
 	}
 
-	g.Execute(func(g *gocui.Gui) error {
+	g.Update(func(g *gocui.Gui) error {
 		view, _ := g.View("mainView")
 		_, err := view.Write(msg)
 		if err != nil {

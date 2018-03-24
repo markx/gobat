@@ -3,13 +3,31 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/jroimartin/gocui"
+  packages = ["."]
+  revision = "4f518eddb04b8f73870836b6d1941e8aa3c06637"
+
+[[projects]]
+  name = "github.com/mattn/go-runewidth"
+  packages = ["."]
+  revision = "9e777a8366cce605130a531d2cd6363d07ad7317"
+  version = "v0.0.2"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/nsf/termbox-go"
+  packages = ["."]
+  revision = "e2050e41c8847748ec5288741c0b19a8cb26d084"
+
+[[projects]]
+  branch = "master"
   name = "github.com/ziutek/telnet"
   packages = ["."]
-  revision = "951c9d62e7953aca3e17ab188c0b563e4494d7ed"
+  revision = "fa49d69e2e3aeefedcccb993d51054543d60360f"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "fe4a3765c4f67fb9a0291784fd3f82e21e90a502a2a84cb7102c433b7149af82"
+  inputs-digest = "5be8e4fcfc8764d8d4abeff4259d98392f12af6a478b5a035846d6bfab20e9da"
   solver-name = "gps-cdcl"
   solver-version = 1

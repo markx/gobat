@@ -3,8 +3,6 @@ package main
 import (
 	"fmt"
 	"log"
-	"strings"
-	"unicode"
 
 	"github.com/jroimartin/gocui"
 )
@@ -16,21 +14,18 @@ func simpleEditor(v *gocui.View, key gocui.Key, ch rune, mod gocui.Modifier) {
 		v.Clear()
 		v.SetCursor(0, 0)
 
-		// remove the extra space
-		//this is a bug in gocui: https://github.com/jroimartin/gocui/issues/69
-		line = strings.TrimRightFunc(line, unicode.IsSpace) + "\n"
-
 		err := ui.server.Write([]byte(line))
 		if err != nil {
 			log.Panicln(err)
 		}
 
-		ui.g.Execute(func(g *gocui.Gui) error {
+		ui.g.Update(func(g *gocui.Gui) error {
 			view, _ := g.View("mainView")
 			_, err := view.Write([]byte(line))
 			if err != nil {
 				return fmt.Errorf("could not write to main view: %v", err)
 			}
+			log.Printf("written to server:%#v", line)
 			return nil
 		})
 
