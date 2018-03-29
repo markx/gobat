@@ -23,7 +23,7 @@
   branch = "master"
   name = "github.com/ziutek/telnet"
   packages = ["."]
-  revision = "fa49d69e2e3aeefedcccb993d51054543d60360f"
+  revision = "c3b780dc415b28894076b4ec975ea3ea69e3980f"
 
 [solve-meta]
   analyzer-name = "dep"

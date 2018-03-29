@@ -30,9 +30,9 @@
   branch = "master"
 
 [[constraint]]
-  branch = "master"
   name = "github.com/ziutek/telnet"
+  branch = "master"
 
 [prune]
-  go-tests = true
-  unused-packages = true
+ go-tests = true
+ unused-packages = true
