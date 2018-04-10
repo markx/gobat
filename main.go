@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"os"
 )
@@ -14,16 +15,15 @@ func main() {
 	defer f.Close()
 	log.SetOutput(f)
 
-	host := flag.String("host", "aardmud.org", "mud server host")
-	port := flag.String("port", "4000", "mud server port")
+	host := flag.String("host", "bat.org", "mud server host")
+	port := flag.String("port", "23", "mud server port")
 	flag.Parse()
 
-	server := &Server{
-		host: *host,
-		port: *port,
+	gui, err := NewSimpleUI(fmt.Sprintf("%s:%s", *host, *port))
+	if err != nil {
+		log.Fatal(err)
 	}
 
-	gui := NewUI(server)
 	if err := gui.Run(); err != nil {
 		log.Fatal(err)
 	}
