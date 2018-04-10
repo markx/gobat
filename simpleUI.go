@@ -22,15 +22,20 @@ func NewSimpleUI(addr string) (*SimpleUI, error) {
 }
 
 func (ui *SimpleUI) Run() error {
-	cmds := make(chan string)
+	inputs := make(chan string)
+	errChan := make(chan error)
 
-	go ui.client.Run()
+	go func() {
+		if err := ui.client.Run(); err != nil {
+			errChan <- err
+		}
+	}()
 
 	go func() {
 		scanner := bufio.NewScanner(os.Stdin)
 		for scanner.Scan() {
 			line := scanner.Text() + "\n"
-			cmds <- line
+			inputs <- line
 		}
 	}()
 
@@ -38,9 +43,9 @@ func (ui *SimpleUI) Run() error {
 		select {
 		case line := <-ui.client.Read():
 			fmt.Print(line)
-		case cmd := <-cmds:
-			ui.client.Write(cmd)
-		case err := <-ui.client.Errs():
+		case input := <-inputs:
+			ui.client.Write(input)
+		case err := <-errChan:
 			return err
 		}
 	}

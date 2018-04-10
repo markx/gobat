@@ -9,7 +9,6 @@ type Client struct {
 	conn     *Conn
 	messages chan string
 	cmds     chan string
-	errs     chan error
 }
 
 func NewClient(addr string) (*Client, error) {
@@ -29,20 +28,13 @@ func (c *Client) Run() error {
 	}
 	c.conn = conn
 
-	quit := make(chan struct{})
 	errChan := make(chan error)
-	defer close(quit)
 
 	go func() {
-		for {
-			select {
-			case cmd := <-c.cmds:
-				_, err := c.conn.Write([]byte(cmd))
-				if err != nil {
-					errChan <- err
-					return
-				}
-			case <-quit:
+		for cmd := range c.cmds {
+			_, err := c.conn.Write([]byte(cmd))
+			if err != nil {
+				errChan <- err
 				return
 			}
 		}
@@ -68,8 +60,4 @@ func (c *Client) Write(cmd string) {
 
 func (c *Client) Read() <-chan string {
 	return c.messages
-}
-
-func (c *Client) Errs() <-chan error {
-	return c.errs
 }
