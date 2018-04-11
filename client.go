@@ -7,14 +7,14 @@ import (
 type Client struct {
 	addr     string
 	conn     *Conn
-	messages chan string
+	messages chan Message
 	cmds     chan string
 }
 
 func NewClient(addr string) (*Client, error) {
 	c := &Client{
 		addr:     addr,
-		messages: make(chan string),
+		messages: make(chan Message),
 		cmds:     make(chan string),
 	}
 
@@ -47,9 +47,10 @@ func (c *Client) Run() error {
 		default:
 			line, err := c.conn.ReadLine()
 			if err != nil {
-				return fmt.Errorf("Failed to read:%v", err)
+				return fmt.Errorf("Failed to read: %v", err)
 			}
-			c.messages <- line
+			m := NewMessage(line)
+			c.messages <- m
 		}
 	}
 }
@@ -58,6 +59,6 @@ func (c *Client) Write(cmd string) {
 	c.cmds <- string(cmd)
 }
 
-func (c *Client) Read() <-chan string {
+func (c *Client) Read() <-chan Message {
 	return c.messages
 }
