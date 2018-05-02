@@ -26,10 +26,6 @@
 
 
 [[constraint]]
-  name = "github.com/jroimartin/gocui"
-  branch = "master"
-
-[[constraint]]
   name = "github.com/ziutek/telnet"
   branch = "master"
 

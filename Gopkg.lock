@@ -3,9 +3,24 @@
 
 [[projects]]
   branch = "master"
-  name = "github.com/jroimartin/gocui"
+  name = "github.com/gdamore/encoding"
   packages = ["."]
-  revision = "4f518eddb04b8f73870836b6d1941e8aa3c06637"
+  revision = "b23993cbb6353f0e6aa98d0ee318a34728f628b9"
+
+[[projects]]
+  name = "github.com/gdamore/tcell"
+  packages = [
+    ".",
+    "terminfo"
+  ]
+  revision = "061d51a604c546b48e92253cb65190d76cecf4c6"
+  version = "v1.0.0"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/lucasb-eyer/go-colorful"
+  packages = ["."]
+  revision = "231272389856c976b7500c4fffcc52ddf06ff4eb"
 
 [[projects]]
   name = "github.com/mattn/go-runewidth"
@@ -15,9 +30,9 @@
 
 [[projects]]
   branch = "master"
-  name = "github.com/nsf/termbox-go"
+  name = "github.com/rivo/tview"
   packages = ["."]
-  revision = "e2050e41c8847748ec5288741c0b19a8cb26d084"
+  revision = "f855bee0205c35e6a055b86cc341effea0f446ce"
 
 [[projects]]
   branch = "master"
@@ -25,9 +40,21 @@
   packages = ["."]
   revision = "c3b780dc415b28894076b4ec975ea3ea69e3980f"
 
+[[projects]]
+  name = "golang.org/x/text"
+  packages = [
+    "encoding",
+    "encoding/internal/identifier",
+    "internal/gen",
+    "transform",
+    "unicode/cldr"
+  ]
+  revision = "f21a4dfb5e38f5895301dc265a8def02365cc3d0"
+  version = "v0.3.0"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "5be8e4fcfc8764d8d4abeff4259d98392f12af6a478b5a035846d6bfab20e9da"
+  inputs-digest = "93706550c92b054fc103701e398da6e85a6aac7db273d05b65217bd1d191700f"
   solver-name = "gps-cdcl"
   solver-version = 1
