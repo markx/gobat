@@ -14,10 +14,7 @@ type SimpleUI struct {
 }
 
 func NewSimpleUI(addr string) (*SimpleUI, error) {
-	client, err := NewClient(addr)
-	if err != nil {
-		return nil, err
-	}
+	client := NewClient(addr)
 
 	return &SimpleUI{
 		client: client,

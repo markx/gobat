@@ -19,7 +19,7 @@ func main() {
 	port := flag.String("port", "23", "mud server port")
 	flag.Parse()
 
-	gui, err := NewSimpleUI(fmt.Sprintf("%s:%s", *host, *port))
+	gui, err := NewUI(fmt.Sprintf("%s:%s", *host, *port))
 	if err != nil {
 		log.Fatal(err)
 	}

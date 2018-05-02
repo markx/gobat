@@ -26,7 +26,7 @@ func (m Message) hasTag(tag string) bool {
 func tagContent(c string) []string {
 	var tags []string
 
-	r := regexp.MustCompile(`\[\w+\]:\s`)
+	r := regexp.MustCompile(`\s[[({]\w+[\])}]:\s`)
 	if r.MatchString(c) {
 		tags = append(tags, "chat")
 	}

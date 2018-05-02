@@ -11,14 +11,14 @@ type Client struct {
 	cmds     chan string
 }
 
-func NewClient(addr string) (*Client, error) {
+func NewClient(addr string) *Client {
 	c := &Client{
 		addr:     addr,
 		messages: make(chan Message),
 		cmds:     make(chan string),
 	}
 
-	return c, nil
+	return c
 }
 
 func (c *Client) Run() error {
