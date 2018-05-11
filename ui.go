@@ -8,45 +8,26 @@ import (
 )
 
 type UI struct {
-	client  *Client
-	view    *tview.Application
-	general *tview.TextView
-	chat    *tview.TextView
-	input   *tview.InputField
+	tviewApp     *tview.Application
+	general      *tview.TextView
+	chat         *tview.TextView
+	input        *tview.InputField
+	inputHandler func(string)
 }
 
-func NewUI(addr string) (*UI, error) {
-	client := NewClient(addr)
-
-	ui := &UI{
-		client: client,
-	}
+func NewUI() *UI {
+	ui := &UI{}
 	ui.initUI()
 
-	return ui, nil
+	return ui
 }
 
 func (ui *UI) Run() error {
-	errChan := make(chan error)
+	return ui.tviewApp.Run()
+}
 
-	go func() {
-		if err := ui.client.Run(); err != nil {
-			errChan <- err
-		}
-	}()
-
-	go func() {
-		errChan <- ui.view.Run()
-	}()
-
-	for {
-		select {
-		case m := <-ui.client.Read():
-			ui.handleMessage(m)
-		case err := <-errChan:
-			return err
-		}
-	}
+func (ui *UI) Stop() {
+	ui.tviewApp.Stop()
 }
 
 func (ui *UI) initUI() {
@@ -76,7 +57,10 @@ func (ui *UI) initUI() {
 		SetFieldTextColor(tcell.ColorDefault)
 
 	inputField.SetDoneFunc(func(key tcell.Key) {
-		ui.client.Write(inputField.GetText() + "\n")
+		if ui.inputHandler == nil {
+			return
+		}
+		ui.inputHandler(inputField.GetText())
 	})
 
 	flex := tview.NewFlex().
@@ -87,16 +71,21 @@ func (ui *UI) initUI() {
 
 	app.SetRoot(flex, true).SetFocus(flex)
 
-	ui.view = app
+	ui.tviewApp = app
 	ui.input = inputField
 	ui.general = generalWindow
 	ui.chat = chatWindow
 }
 
-func (ui *UI) handleMessage(m Message) {
-	if m.hasTag("chat") {
-		fmt.Fprint(tview.ANSIIWriter(ui.chat), m.Content)
-		return
+func (ui *UI) SendToWindow(window, content string) {
+	switch window {
+	case "chat":
+		fmt.Fprint(tview.ANSIIWriter(ui.chat), content)
+	default:
+		fmt.Fprint(tview.ANSIIWriter(ui.general), content)
 	}
-	fmt.Fprint(tview.ANSIIWriter(ui.general), m.Content)
+}
+
+func (ui *UI) SetInputHandler(handler func(string)) {
+	ui.inputHandler = handler
 }

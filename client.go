@@ -1,43 +1,37 @@
 package main
 
-import (
-	"fmt"
-)
-
 type Client struct {
-	addr     string
-	conn     *Conn
-	messages chan Message
-	cmds     chan string
+	conn *Conn
+	ui   *UI
 }
 
-func NewClient(addr string) *Client {
-	c := &Client{
-		addr:     addr,
-		messages: make(chan Message),
-		cmds:     make(chan string),
+func NewClient(addr string) (*Client, error) {
+	conn, err := Dial(addr)
+	if err != nil {
+		return nil, err
 	}
 
-	return c
+	ui := NewUI()
+
+	c := &Client{
+		conn,
+		ui,
+	}
+
+	return c, nil
+}
+
+func (c *Client) handleInput(content string) {
+	c.conn.Write([]byte(content + "\n"))
 }
 
 func (c *Client) Run() error {
-	conn, err := Dial(c.addr)
-	if err != nil {
-		return err
-	}
-	c.conn = conn
+	c.ui.SetInputHandler(c.handleInput)
 
-	errChan := make(chan error)
+	errChan := make(chan error, 1)
 
 	go func() {
-		for cmd := range c.cmds {
-			_, err := c.conn.Write([]byte(cmd))
-			if err != nil {
-				errChan <- err
-				return
-			}
-		}
+		errChan <- c.ui.Run()
 	}()
 
 	for {
@@ -47,18 +41,18 @@ func (c *Client) Run() error {
 		default:
 			line, err := c.conn.ReadLine()
 			if err != nil {
-				return fmt.Errorf("Failed to read: %v", err)
+				c.ui.Stop()
+				return err
 			}
-			m := NewMessage(line)
-			c.messages <- m
+			c.handleMessage(NewMessage(line))
 		}
 	}
 }
 
-func (c *Client) Write(cmd string) {
-	c.cmds <- string(cmd)
-}
-
-func (c *Client) Read() <-chan Message {
-	return c.messages
+func (c *Client) handleMessage(m Message) {
+	if m.hasTag("chat") {
+		c.ui.SendToWindow("chat", m.Content)
+		return
+	}
+	c.ui.SendToWindow("general", m.Content)
 }

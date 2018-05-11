@@ -19,13 +19,12 @@ func main() {
 	port := flag.String("port", "23", "mud server port")
 	flag.Parse()
 
-	gui, err := NewUI(fmt.Sprintf("%s:%s", *host, *port))
+	client, err := NewClient(fmt.Sprintf("%s:%s", *host, *port))
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	if err := gui.Run(); err != nil {
+	if err := client.Run(); err != nil {
 		log.Fatal(err)
 	}
-
 }

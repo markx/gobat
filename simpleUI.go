@@ -9,21 +9,15 @@ import (
 )
 
 type SimpleUI struct {
-	client     *Client
 	chatOutput io.WriteCloser
 }
 
 func NewSimpleUI(addr string) (*SimpleUI, error) {
-	client := NewClient(addr)
-
-	return &SimpleUI{
-		client: client,
-	}, nil
+	return &SimpleUI{}, nil
 }
 
 func (ui *SimpleUI) Run() error {
 	inputs := make(chan string)
-	errChan := make(chan error)
 
 	chatFile, err := os.OpenFile("chat.log", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
 	if err != nil {
@@ -32,30 +26,13 @@ func (ui *SimpleUI) Run() error {
 	defer chatFile.Close()
 	ui.chatOutput = chatFile
 
-	go func() {
-		if err := ui.client.Run(); err != nil {
-			errChan <- err
-		}
-	}()
-
-	go func() {
-		scanner := bufio.NewScanner(os.Stdin)
-		for scanner.Scan() {
-			line := scanner.Text() + "\n"
-			inputs <- line
-		}
-	}()
-
-	for {
-		select {
-		case m := <-ui.client.Read():
-			ui.handleMessage(m)
-		case input := <-inputs:
-			ui.client.Write(input)
-		case err := <-errChan:
-			return err
-		}
+	scanner := bufio.NewScanner(os.Stdin)
+	for scanner.Scan() {
+		line := scanner.Text() + "\n"
+		inputs <- line
 	}
+
+	return nil
 }
 
 func (ui *SimpleUI) handleMessage(m Message) {

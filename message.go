@@ -23,6 +23,20 @@ func (m Message) hasTag(tag string) bool {
 	return false
 }
 
+type PlayerStatus struct {
+	Name  string
+	Level int
+	HP    int
+	MP    int
+	AP    int
+}
+
+type TeammateStatus struct {
+	PlayerStatus
+	Row    int
+	Column int
+}
+
 func tagContent(c string) []string {
 	var tags []string
 
