@@ -3,9 +3,9 @@ package main
 import (
 	"bufio"
 	"net"
-	"time"
 
 	"github.com/ziutek/telnet"
+	"golang.org/x/net/proxy"
 )
 
 type Conn struct {
@@ -14,17 +14,24 @@ type Conn struct {
 }
 
 func Dial(addr string) (*Conn, error) {
-	conn, err := telnet.DialTimeout("tcp", addr, 5*time.Second)
+	dialer := proxy.FromEnvironment()
+	conn, err := dialer.Dial("tcp", addr)
 	if err != nil {
 		return nil, err
 	}
+
 	return NewConn(conn)
 }
 
 func NewConn(conn net.Conn) (*Conn, error) {
+	telnetConn, err := telnet.NewConn(conn)
+	if err != nil {
+		return nil, err
+	}
+
 	c := Conn{
-		Conn: conn,
-		r:    bufio.NewReaderSize(conn, 1024),
+		Conn: telnetConn,
+		r:    bufio.NewReaderSize(telnetConn, 1024),
 	}
 	return &c, nil
 }
