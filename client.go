@@ -1,8 +1,14 @@
 package main
 
+import (
+	"fmt"
+	"log"
+)
+
 type Client struct {
-	conn *Conn
-	ui   *UI
+	conn     *Conn
+	ui       *UI
+	triggers *Triggers
 }
 
 func NewClient(addr string) (*Client, error) {
@@ -14,8 +20,9 @@ func NewClient(addr string) (*Client, error) {
 	ui := NewUI()
 
 	c := &Client{
-		conn,
-		ui,
+		conn:     conn,
+		ui:       ui,
+		triggers: NewTriggers(),
 	}
 
 	return c, nil
@@ -44,14 +51,25 @@ func (c *Client) Run() error {
 				c.ui.Stop()
 				return err
 			}
+			log.Printf("msg: %s", line)
 			c.handleMessage(NewMessage(line))
 		}
 	}
 }
 
+func (c *Client) Send(cmd string) {
+	fmt.Fprint(c.conn, cmd)
+}
+
 func (c *Client) handleMessage(m Message) {
+	c.triggers.Match(&m, c)
+
 	if m.hasTag("chat") {
 		c.ui.SendToWindow("chat", m.Content)
+		return
+	}
+	if m.hasTag("prompt") {
+		c.ui.SendToWindow("general", m.Content)
 		return
 	}
 	c.ui.SendToWindow("general", m.Content)
