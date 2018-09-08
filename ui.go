@@ -52,7 +52,7 @@ func (ui *UI) initUI() {
 	chatWindow.SetBorder(true)
 
 	inputField := tview.NewInputField().
-		SetLabel(">").
+		SetLabel("> ").
 		SetFieldBackgroundColor(tcell.ColorDefault).
 		SetFieldTextColor(tcell.ColorDefault)
 

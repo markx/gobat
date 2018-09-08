@@ -1,14 +1,27 @@
 package main
 
+import "regexp"
+
 type Message struct {
 	Content string
 	Tags    []string
 }
 
 func NewMessage(content string) Message {
-	return Message{
+	m := Message{
 		Content: content,
 	}
+
+	return handleChat(m)
+}
+
+func handleChat(m Message) Message {
+	r := regexp.MustCompile(`\s[[({]\w+[\])}]:\s`)
+	if r.MatchString(m.Content) {
+		m.Tags = append(m.Tags, "chat")
+	}
+
+	return m
 }
 
 func (m Message) hasTag(tag string) bool {
