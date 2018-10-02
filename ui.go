@@ -4,14 +4,16 @@ import (
 	"fmt"
 
 	"github.com/gdamore/tcell"
+	"github.com/markx/gobat/prompt"
 	"github.com/rivo/tview"
 )
 
 type UI struct {
 	tviewApp     *tview.Application
-	general      *tview.TextView
+	main         *tview.TextView
 	chat         *tview.TextView
-	input        *tview.InputField
+	character    *tview.TextView
+	input        *prompt.Prompt
 	inputHandler func(string)
 }
 
@@ -33,14 +35,15 @@ func (ui *UI) Stop() {
 func (ui *UI) initUI() {
 	app := tview.NewApplication()
 
-	generalWindow := tview.NewTextView().
+	mainWindow := tview.NewTextView().
 		SetDynamicColors(true).
 		SetTextColor(tcell.ColorDefault).
 		SetRegions(true).
 		SetChangedFunc(func() {
 			app.Draw()
 		})
-	generalWindow.SetBorder(true)
+	mainWindow.SetBorder(true).
+		SetTitle("Main")
 
 	chatWindow := tview.NewTextView().
 		SetDynamicColors(true).
@@ -49,32 +52,39 @@ func (ui *UI) initUI() {
 		SetChangedFunc(func() {
 			app.Draw()
 		})
-	chatWindow.SetBorder(true)
+	chatWindow.SetBorder(true).
+		SetTitle("Chat")
 
-	inputField := tview.NewInputField().
-		SetLabel("> ").
-		SetFieldBackgroundColor(tcell.ColorDefault).
-		SetFieldTextColor(tcell.ColorDefault)
+	characterWindow := tview.NewTextView()
+	characterWindow.SetBorder(true).SetTitle("Player")
 
-	inputField.SetDoneFunc(func(key tcell.Key) {
+	input := prompt.NewPrompt()
+	input.SetDoneFunc(func(key tcell.Key) {
 		if ui.inputHandler == nil {
 			return
 		}
-		ui.inputHandler(inputField.GetText())
+		ui.inputHandler(input.GetText())
 	})
+
+	sideWindow := tview.NewFlex().
+		SetDirection(tview.FlexRow).
+		AddItem(chatWindow, 0, 1, false).
+		AddItem(characterWindow, 0, 1, false)
 
 	flex := tview.NewFlex().
 		SetDirection(tview.FlexRow).
-		AddItem(chatWindow, 15, 0, false).
-		AddItem(generalWindow, 0, 1, false).
-		AddItem(inputField, 1, 0, true)
+		AddItem(tview.NewFlex().
+			AddItem(mainWindow, 128, 0, false).
+			AddItem(sideWindow, 0, 1, false), 0, 1, false).
+		AddItem(input, 1, 0, true)
 
 	app.SetRoot(flex, true).SetFocus(flex)
 
 	ui.tviewApp = app
-	ui.input = inputField
-	ui.general = generalWindow
+	ui.input = input
+	ui.main = mainWindow
 	ui.chat = chatWindow
+	ui.character = characterWindow
 }
 
 func (ui *UI) SendToWindow(window, content string) {
@@ -82,7 +92,7 @@ func (ui *UI) SendToWindow(window, content string) {
 	case "chat":
 		fmt.Fprint(tview.ANSIIWriter(ui.chat), content)
 	default:
-		fmt.Fprint(tview.ANSIIWriter(ui.general), content)
+		fmt.Fprint(tview.ANSIIWriter(ui.main), content)
 	}
 }
 
