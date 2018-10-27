@@ -1,6 +1,8 @@
 package prompt
 
 import (
+	"log"
+
 	"github.com/gdamore/tcell"
 	"github.com/rivo/tview"
 )
@@ -21,6 +23,10 @@ func NewPrompt() *Prompt {
 		History:    &History{},
 	}
 
+	if err := p.History.Load(); err != nil {
+		log.Printf("failed to load history")
+	}
+
 	return p
 }
 
@@ -29,6 +35,7 @@ func (p *Prompt) SetDoneFunc(f func(tcell.Key)) {
 		text := p.InputField.GetText()
 		if len(text) > 0 {
 			p.History.Add(text)
+			p.History.Save()
 		}
 
 		f(key)
