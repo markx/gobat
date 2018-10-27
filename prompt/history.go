@@ -1,8 +1,13 @@
 package prompt
 
 import (
+	"bufio"
+	"fmt"
+	"os"
 	"strings"
 )
+
+const historyFile = "history.txt"
 
 type History struct {
 	history        []string
@@ -17,7 +22,7 @@ func (h *History) Add(s string) {
 
 func (h *History) SearchUp(target string) (string, bool) {
 	if !h.session.isSameSession(target) {
-		h.session = NewSearchSession(target, h.history)
+		h.session = newSearchSession(target, h.history)
 	}
 
 	return h.session.searchUp(target)
@@ -25,7 +30,7 @@ func (h *History) SearchUp(target string) (string, bool) {
 
 func (h *History) SearchDown(target string) (string, bool) {
 	if !h.session.isSameSession(target) {
-		h.session = NewSearchSession(target, h.history)
+		h.session = newSearchSession(target, h.history)
 	}
 
 	return h.session.searchDown(target)
@@ -35,13 +40,44 @@ func match(s, t string) bool {
 	return strings.Contains(s, t)
 }
 
+func (h *History) Save() error {
+	file, err := os.OpenFile(historyFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	if err != nil {
+		return fmt.Errorf("failed to open file: %v", err)
+	}
+	defer file.Close()
+
+	last := h.history[len(h.history)-1]
+	_, err = file.WriteString(last + "\n")
+	if err != nil {
+		return fmt.Errorf("failed to write to file: %v", err)
+	}
+
+	return nil
+}
+
+func (h *History) Load() error {
+	file, err := os.Open(historyFile)
+	if err != nil {
+		return fmt.Errorf("could not open history file: %v", err)
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		h.history = append(h.history, scanner.Text())
+	}
+
+	return nil
+}
+
 type searchSession struct {
 	originalTarget string
 	lastMatchIndex int
 	candidates     []string
 }
 
-func NewSearchSession(target string, history []string) *searchSession {
+func newSearchSession(target string, history []string) *searchSession {
 	candidates := append([]string{target}, history...)
 	candidates = append(candidates, target)
 
